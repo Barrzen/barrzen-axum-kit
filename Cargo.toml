@@ -11,7 +11,8 @@ members = [
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-repository = "https://github.com/your-org/barrzen-axum-kit"
+repository = "https://github.com/Barrzen/barrzen-axum-kit"
+homepage = "https://github.com/Barrzen/barrzen-axum-kit"
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
@@ -24,10 +25,10 @@ expect_used = "warn"
 
 [workspace.dependencies]
 # Core
-axum = { version = "0.7", features = ["macros"] }
+axum = { version = "0.8", features = ["macros"] }
 tokio = { version = "1", features = ["full"] }
-tower = { version = "0.4", features = ["util", "timeout"] }
-tower-http = { version = "0.5", features = ["cors", "compression-gzip", "limit", "request-id", "trace", "set-header", "sensitive-headers", "timeout"] }
+tower = { version = "0.5", features = ["util", "timeout"] }
+tower-http = { version = "0.6", features = ["cors", "compression-gzip", "limit", "request-id", "trace", "set-header", "sensitive-headers", "timeout"] }
 
 # Serialization
 serde = { version = "1", features = ["derive"] }
@@ -57,21 +58,21 @@ sea-orm = { version = "1", features = ["sqlx-postgres", "runtime-tokio-rustls", 
 moka = { version = "0.12", features = ["future"] }
 
 # Cache - Redis/Valkey
-deadpool-redis = { version = "0.18" }
+deadpool-redis = { version = "0.22" }
 
 # Search - Meilisearch
-meilisearch-sdk = { version = "0.27" }
+meilisearch-sdk = { version = "0.32" }
 
 # Broker - NATS
-async-nats = { version = "0.38" }
+async-nats = { version = "0.46" }
 
 # OpenAPI
 utoipa = { version = "5", features = ["axum_extras", "chrono"] }
-utoipa-swagger-ui = { version = "8", features = ["axum"] }
+utoipa-swagger-ui = { version = "9", features = ["axum"] }
 
 # OpenTelemetry
-opentelemetry = { version = "0.27" }
-opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.27", features = ["tonic"] }
-tracing-opentelemetry = { version = "0.28" }
-tonic = { version = "0.12" }
+opentelemetry = { version = "0.31" }
+opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
+tracing-opentelemetry = { version = "0.32" }
+tonic = { version = "0.14" }

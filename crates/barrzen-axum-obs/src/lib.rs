@@ -2,11 +2,18 @@
 //!
 //! Handles tracing setup and OpenTelemetry integration.
 
-use anyhow::Context;
 use barrzen_axum_core::{Config, LogFormat};
 use tracing_subscriber::{
-    fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter, Layer,
+    fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
+
+#[cfg(feature = "otel")]
+use tracing_subscriber::Layer;
+#[cfg(feature = "otel")]
+use std::sync::OnceLock;
+
+#[cfg(feature = "otel")]
+static OTEL_PROVIDER: OnceLock<opentelemetry_sdk::trace::SdkTracerProvider> = OnceLock::new();
 
 /// Initialize tracing based on configuration
 ///
@@ -63,7 +70,9 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
 pub fn shutdown() {
     #[cfg(feature = "otel")]
     {
-        opentelemetry::global::shutdown_tracer_provider();
+        if let Some(provider) = OTEL_PROVIDER.get() {
+            let _ = provider.shutdown();
+        }
     }
 }
 
@@ -74,7 +83,7 @@ fn init_otel_layer<S>(config: &Config) -> anyhow::Result<impl Layer<S>>
 where
     S: tracing::Subscriber + for<'span> tracing_subscriber::registry::LookupSpan<'span>,
 {
-    use opentelemetry::{global, KeyValue, trace::TracerProvider as _};
+    use opentelemetry::{global, trace::TracerProvider as _};
     use opentelemetry_otlp::WithExportConfig;
     use opentelemetry_sdk::{propagation::TraceContextPropagator, trace as sdktrace, Resource};
     use tracing_opentelemetry::OpenTelemetryLayer;
@@ -86,21 +95,25 @@ where
     let otel_endpoint = std::env::var("OTEL_EXPORTER_OTLP_ENDPOINT")
         .unwrap_or_else(|_| "http://localhost:4317".to_string());
 
+    // OTEL 0.31: Use SpanExporter::builder().with_tonic()
     let exporter = opentelemetry_otlp::SpanExporter::builder()
         .with_tonic()
         .with_endpoint(otel_endpoint)
         .build()?;
 
-    let provider = sdktrace::TracerProvider::builder()
-        .with_batch_exporter(exporter, opentelemetry_sdk::runtime::Tokio)
-        .with_resource(Resource::new(vec![KeyValue::new(
-            "service.name",
-            app_name.clone(),
-        )]))
+    // OTEL 0.31: Use Resource::builder()
+    let resource = Resource::builder()
+        .with_service_name(app_name.clone())
+        .build();
+
+    let provider = sdktrace::SdkTracerProvider::builder()
+        .with_batch_exporter(exporter)
+        .with_resource(resource)
         .build();
     
-    // Set global provider so that users can access it without passing it around
+    // Set global provider
     global::set_tracer_provider(provider.clone());
+    let _ = OTEL_PROVIDER.set(provider.clone());
 
     let tracer = provider.tracer("barrzen-axum");
 

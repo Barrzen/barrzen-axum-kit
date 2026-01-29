@@ -3,6 +3,9 @@ name = "barrzen-axum-obs"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/barrzen-axum-obs"
 description = "Observability for Barrzen Axum: tracing and OpenTelemetry"
 
 [lints]
@@ -22,7 +25,7 @@ otel = [
 
 [dependencies]
 # Core (for config types)
-barrzen-axum-core = { path = "../barrzen-axum-core" }
+barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.0" }
 
 # Error handling
 anyhow.workspace = true

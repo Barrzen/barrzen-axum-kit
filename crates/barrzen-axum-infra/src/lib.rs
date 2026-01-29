@@ -8,10 +8,12 @@
 //! - Search (Meilisearch)
 //! - Broker (NATS)
 
+
+#[cfg(any(feature = "cache-moka", feature = "cache-redis"))]
 use std::sync::Arc;
+#[cfg(feature = "db")]
 use std::time::Duration;
 
-use anyhow::Context;
 use barrzen_axum_core::{Config, HealthCheck, ReadyChecker};
 
 /// Infrastructure container
@@ -41,6 +43,21 @@ impl Infra {
     /// Returns error if a feature is enabled at runtime but not compiled,
     /// or if connection setup fails.
     pub async fn init(config: &Config) -> anyhow::Result<Self> {
+        #[cfg(any(
+            feature = "db",
+            feature = "cache-moka",
+            feature = "cache-redis",
+            feature = "meilisearch",
+            feature = "nats"
+        ))]
+        let mut infra = Self::default();
+        #[cfg(not(any(
+            feature = "db",
+            feature = "cache-moka",
+            feature = "cache-redis",
+            feature = "meilisearch",
+            feature = "nats"
+        )))]
         let infra = Self::default();
 
         // Database
@@ -149,7 +166,8 @@ impl ReadyChecker for Infra {
 // Internal initializers
 
 #[cfg(feature = "db")]
-async fn init_db(config: &Config) -> anyhow::Result<sea_orm::DatabaseConnection> {
+async fn init_db(_config: &Config) -> anyhow::Result<sea_orm::DatabaseConnection> {
+    use anyhow::Context;
     use sea_orm::{ConnectOptions, Database};
     
     // We would need DATABASE_URL logic here. 
@@ -172,13 +190,13 @@ async fn init_db(config: &Config) -> anyhow::Result<sea_orm::DatabaseConnection>
 }
 
 #[cfg(feature = "cache-moka")]
-fn init_moka_cache(config: &Config) -> Arc<dyn Cache + Send + Sync> {
+fn init_moka_cache(_config: &Config) -> Arc<dyn Cache + Send + Sync> {
     // Placeholder Moka init
     Arc::new(MokaCacheStub)
 }
 
 #[cfg(feature = "cache-redis")]
-async fn init_redis_cache(config: &Config) -> anyhow::Result<Arc<dyn Cache + Send + Sync>> {
+async fn init_redis_cache(_config: &Config) -> anyhow::Result<Arc<dyn Cache + Send + Sync>> {
     // Placeholder Redis init
     Ok(Arc::new(RedisCacheStub))
 }
@@ -189,12 +207,14 @@ pub trait Cache {
     async fn ping(&self) -> anyhow::Result<()>;
 }
 
+#[allow(dead_code)]
 struct MokaCacheStub;
 #[async_trait::async_trait]
 impl Cache for MokaCacheStub {
     async fn ping(&self) -> anyhow::Result<()> { Ok(()) }
 }
 
+#[allow(dead_code)]
 struct RedisCacheStub;
 #[async_trait::async_trait]
 impl Cache for RedisCacheStub {

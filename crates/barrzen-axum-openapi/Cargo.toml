@@ -3,6 +3,9 @@ name = "barrzen-axum-openapi"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/barrzen-axum-openapi"
 description = "OpenAPI documentation for Barrzen Axum applications"
 
 [lints]

@@ -3,6 +3,9 @@ name = "barrzen-axum-core"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+documentation = "https://docs.rs/barrzen-axum-core"
 description = "Core components for Barrzen Axum applications: config, banner, AppBuilder, middleware"
 
 [lints]
