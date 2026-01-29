@@ -1,0 +1,55 @@
+[package]
+name = "barrzen-axum-infra"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Infrastructure integrations for Barrzen Axum: database, cache, search, broker"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+
+# Database (SeaORM)
+db = ["sea-orm"]
+
+# Cache backends
+cache-moka = ["moka"]
+cache-redis = ["deadpool-redis"]
+
+# Search
+meilisearch = ["meilisearch-sdk"]
+
+# Brokers
+nats = ["async-nats"]
+
+[dependencies]
+# Core (always needed for config types)
+barrzen-axum-core = { path = "../barrzen-axum-core" }
+
+# Error handling
+anyhow.workspace = true
+thiserror.workspace = true
+async-trait.workspace = true
+
+# Tracing
+tracing.workspace = true
+
+# Optional: Database
+sea-orm = { workspace = true, optional = true }
+
+# Optional: Cache - Moka
+moka = { workspace = true, optional = true }
+
+# Optional: Cache - Redis
+deadpool-redis = { workspace = true, optional = true }
+
+# Optional: Search
+meilisearch-sdk = { workspace = true, optional = true }
+
+# Optional: Broker - NATS
+async-nats = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }

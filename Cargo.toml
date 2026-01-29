@@ -1,0 +1,77 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/barrzen-axum-core",
+    "crates/barrzen-axum-infra",
+    "crates/barrzen-axum-obs",
+    "crates/barrzen-axum-openapi",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+repository = "https://github.com/your-org/barrzen-axum-kit"
+
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = "warn"
+pedantic = "warn"
+unwrap_used = "warn"
+expect_used = "warn"
+
+[workspace.dependencies]
+# Core
+axum = { version = "0.7", features = ["macros"] }
+tokio = { version = "1", features = ["full"] }
+tower = { version = "0.4", features = ["util", "timeout"] }
+tower-http = { version = "0.5", features = ["cors", "compression-gzip", "limit", "request-id", "trace", "set-header", "sensitive-headers", "timeout"] }
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Config
+dotenvy = "0.15"
+envy = "0.4"
+
+# Error handling
+anyhow = "1"
+thiserror = "2"
+async-trait = "0.1"
+
+# Logging / Tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+
+# Utilities
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", features = ["serde"] }
+
+# Database (SeaORM)
+sea-orm = { version = "1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+
+# Cache - Moka (embedded)
+moka = { version = "0.12", features = ["future"] }
+
+# Cache - Redis/Valkey
+deadpool-redis = { version = "0.18" }
+
+# Search - Meilisearch
+meilisearch-sdk = { version = "0.27" }
+
+# Broker - NATS
+async-nats = { version = "0.38" }
+
+# OpenAPI
+utoipa = { version = "5", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "8", features = ["axum"] }
+
+# OpenTelemetry
+opentelemetry = { version = "0.27" }
+opentelemetry_sdk = { version = "0.27", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.27", features = ["tonic"] }
+tracing-opentelemetry = { version = "0.28" }
+tonic = { version = "0.12" }

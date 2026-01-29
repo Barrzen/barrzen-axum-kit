@@ -1,0 +1,49 @@
+[package]
+name = "barrzen-axum-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core components for Barrzen Axum applications: config, banner, AppBuilder, middleware"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+openapi = ["utoipa"]
+
+[dependencies]
+# Core
+axum = { workspace = true }
+tower = { workspace = true }
+tower-http = { workspace = true }
+tokio = { workspace = true }
+
+# Serialization
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Config
+dotenvy = { workspace = true }
+envy = { workspace = true }
+
+# Error handling
+anyhow.workspace = true
+thiserror = { workspace = true }
+async-trait.workspace = true
+
+# Logging / Tracing
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+
+# Utilities
+uuid = { workspace = true }
+chrono = { workspace = true }
+base64 = "0.22"
+http = "1"
+
+# OpenAPI
+utoipa = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }

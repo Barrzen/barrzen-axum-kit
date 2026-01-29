@@ -1,0 +1,42 @@
+[package]
+name = "barrzen-axum-obs"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Observability for Barrzen Axum: tracing and OpenTelemetry"
+
+[lints]
+workspace = true
+
+[features]
+default = []
+
+# OpenTelemetry support
+otel = [
+    "opentelemetry",
+    "opentelemetry_sdk",
+    "opentelemetry-otlp",
+    "tracing-opentelemetry",
+    "tonic",
+]
+
+[dependencies]
+# Core (for config types)
+barrzen-axum-core = { path = "../barrzen-axum-core" }
+
+# Error handling
+anyhow.workspace = true
+
+# Tracing (always needed)
+tracing.workspace = true
+tracing-subscriber.workspace = true
+
+# Optional: OpenTelemetry
+opentelemetry = { workspace = true, optional = true }
+opentelemetry_sdk = { workspace = true, optional = true }
+opentelemetry-otlp = { workspace = true, optional = true }
+tracing-opentelemetry = { workspace = true, optional = true }
+tonic = { workspace = true, optional = true }
+
+[dev-dependencies]
+tokio = { workspace = true, features = ["test-util", "macros"] }
