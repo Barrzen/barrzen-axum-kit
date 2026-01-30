@@ -1,0 +1,7 @@
+[workspace]
+changelog_update = true
+git_release_enable = true
+git_release_body = "{{ changelog }}"
+git_tag_enable = true
+publish_allow_dirty = false
+release_always = false
