@@ -29,7 +29,12 @@ jobs:
       - name: Install release-plz CLI
         run: cargo install release-plz --locked
       - name: Set version
-        run: release-plz set-version ${{ inputs.release_version }}
+        run: |
+          release-plz set-version \
+            barrzen-axum-core@${{ inputs.release_version }} \
+            barrzen-axum-infra@${{ inputs.release_version }} \
+            barrzen-axum-obs@${{ inputs.release_version }} \
+            barrzen-axum-openapi@${{ inputs.release_version }}
       - name: Run release-plz (release)
         uses: release-plz/action@v0.5
         with:
