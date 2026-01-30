@@ -91,16 +91,14 @@ impl AppBuilder {
         };
 
         // Start with core routes
-        let mut app = Router::new()
+        let mut app: Router<CoreState> = Router::new()
             .route("/healthz", axum::routing::get(handlers::healthz))
             .route("/readyz", axum::routing::get(handlers::readyz))
             .route("/version", axum::routing::get(handlers::version));
 
-        // Merge stateless routes (promoted to stateful via nesting)
+        // Merge stateless routes as fallback
         if let Some(router) = user_stateless_router {
-            // We use nest_service to merge compatible routers regardless of path structure
-            // Using "/" as prefix effectively merges paths
-            app = app.nest_service("/", router);
+            app = app.fallback_service(router);
         }
 
         // Merge user routes
@@ -111,7 +109,6 @@ impl AppBuilder {
         // Apply middleware
         app = apply_middleware(app, &config);
 
-        // Add state
         app.with_state(state)
     }
 
