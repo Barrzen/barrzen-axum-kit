@@ -29,7 +29,7 @@ nats = ["async-nats"]
 
 [dependencies]
 # Core (always needed for config types)
-barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.0" }
+barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.1" }
 
 # Error handling
 anyhow.workspace = true
