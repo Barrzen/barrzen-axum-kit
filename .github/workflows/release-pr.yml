@@ -1,9 +1,7 @@
 name: release-pr
 
 on:
-  push:
-    branches:
-      - main
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -11,10 +9,24 @@ permissions:
 
 jobs:
   release-pr:
+    if: ${{ github.repository_owner == 'Barrzen' }}
     runs-on: ubuntu-latest
+    concurrency:
+      group: release-pr-${{ github.ref }}
+      cancel-in-progress: false
     steps:
-      - uses: actions/checkout@v4
-      - uses: dtolnay/rust-toolchain@stable
-      - uses: MarcoIeni/release-plz-action@v0.5
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Run release-plz (release-pr)
+        uses: release-plz/action@v0.5
         with:
           command: release-pr
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
