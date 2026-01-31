@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.1.2](https://github.com/Barrzen/barrzen-axum-kit/compare/barrzen-axum-obs-v0.1.0...barrzen-axum-obs-v0.1.2) - 2026-01-30
+## [0.1.3](https://github.com/Barrzen/barrzen-axum-kit/compare/barrzen-axum-obs-v0.1.0...barrzen-axum-obs-v0.1.3) - 2026-01-30
 
 ### Other
 

@@ -1,6 +1,6 @@
 [package]
 name = "barrzen-axum-obs"
-version = "0.1.2"
+version = "0.1.3"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -25,7 +25,7 @@ otel = [
 
 [dependencies]
 # Core (for config types)
-barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.2" }
+barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.3" }
 
 # Error handling
 anyhow.workspace = true
