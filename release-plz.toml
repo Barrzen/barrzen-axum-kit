@@ -1,7 +1,15 @@
 [workspace]
 changelog_update = true
-git_release_enable = true
 git_release_body = "{{ changelog }}"
-git_tag_enable = true
+git_release_enable = false
+git_tag_enable = false
+publish = false
 publish_allow_dirty = false
 release_always = false
+
+[[package]]
+name = "barrzen-axum-core"
+git_release_enable = true
+git_release_name = "v{{ version }}"
+git_tag_enable = true
+git_tag_name = "v{{ version }}"

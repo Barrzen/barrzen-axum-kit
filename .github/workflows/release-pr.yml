@@ -27,7 +27,7 @@ jobs:
       - name: Cache cargo
         uses: Swatinem/rust-cache@v2
       - name: Run release-plz (release-pr)
-        uses: release-plz/action@v0.5
+        uses: release-plz/action@v0.5.124
         with:
           command: release-pr
         env:
