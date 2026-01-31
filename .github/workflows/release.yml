@@ -205,4 +205,4 @@ jobs:
       - name: Create tag and GitHub release
         env:
           GITHUB_TOKEN: ${{ env.RELEASE_TOKEN }}
-        run: release-plz release
+        run: release-plz release --forge github --git-token "${RELEASE_TOKEN}"
