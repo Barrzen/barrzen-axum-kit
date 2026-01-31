@@ -5,7 +5,7 @@ git_release_enable = false
 git_tag_enable = false
 publish = false
 publish_allow_dirty = false
-release_always = false
+release_always = true
 
 [[package]]
 name = "barrzen-axum-core"
