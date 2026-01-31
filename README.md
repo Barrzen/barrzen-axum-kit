@@ -2,16 +2,43 @@
 
 A reusable Axum application framework split into modular crates.
 
+[![tests](https://github.com/Barrzen/barrzen-axum-kit/actions/workflows/ci.yml/badge.svg)](https://github.com/Barrzen/barrzen-axum-kit/actions/workflows/ci.yml)
+
+GitHub repo: `https://github.com/Barrzen/barrzen-axum-kit`
+
 ## Crates
 
-| Crate | Description | Features |
-|-------|-------------|----------|
-| `barrzen-axum-core` | Config, banner, AppBuilder, middleware, handlers | - |
-| `barrzen-axum-infra` | Database, cache, search, broker | `db`, `cache-moka`, `cache-redis`, `meilisearch`, `nats` |
-| `barrzen-axum-obs` | Tracing and OpenTelemetry | `otel` |
-| `barrzen-axum-openapi` | Swagger UI and OpenAPI docs | `openapi` |
+| Crate | Description | Features | Crates.io | Docs |
+|-------|-------------|----------|-----------|------|
+| `barrzen-axum-core` | Config, banner, AppBuilder, middleware, handlers | - | https://crates.io/crates/barrzen-axum-core | https://docs.rs/barrzen-axum-core |
+| `barrzen-axum-infra` | Database, cache, search, broker | `db`, `cache-moka`, `cache-redis`, `meilisearch`, `nats` | https://crates.io/crates/barrzen-axum-infra | https://docs.rs/barrzen-axum-infra |
+| `barrzen-axum-obs` | Tracing and OpenTelemetry | `otel` | https://crates.io/crates/barrzen-axum-obs | https://docs.rs/barrzen-axum-obs |
+| `barrzen-axum-openapi` | Swagger UI and OpenAPI docs | `openapi` | https://crates.io/crates/barrzen-axum-openapi | https://docs.rs/barrzen-axum-openapi |
 
-## Usage
+## Installation
+
+Pick the crates you need:
+
+```toml
+[dependencies]
+barrzen-axum-core = "0.1.4"
+
+# Optional crates
+barrzen-axum-infra = { version = "0.1.4", features = ["db", "cache-redis"] }
+barrzen-axum-obs = { version = "0.1.4", features = ["otel"] }
+barrzen-axum-openapi = { version = "0.1.4", features = ["openapi"] }
+```
+
+Or using cargo:
+
+```bash
+cargo add barrzen-axum-core
+cargo add barrzen-axum-infra --features db,cache-redis
+cargo add barrzen-axum-obs --features otel
+cargo add barrzen-axum-openapi --features openapi
+```
+
+## Quick start
 
 ```rust
 use barrzen_axum_core::{AppBuilder, AppConfig, BuildInfo};
@@ -30,6 +57,13 @@ async fn main() -> anyhow::Result<()> {
         .await
 }
 ```
+
+## Docs
+
+- Rust docs: https://docs.rs/barrzen-axum-core
+- OpenAPI docs: https://docs.rs/barrzen-axum-openapi
+- Observability: https://docs.rs/barrzen-axum-obs
+- Infra: https://docs.rs/barrzen-axum-infra
 
 ## Development
 
