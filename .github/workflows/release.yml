@@ -3,19 +3,26 @@ name: release
 on:
   workflow_dispatch:
     inputs:
-      release_version:
-        description: "Version to set (e.g., 1.2.3)"
+      bump:
+        description: "Version bump (patch/minor/major)"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
         required: true
 
 permissions:
   contents: write
-  id-token: write
 
 jobs:
   release:
     if: ${{ github.repository_owner == 'Barrzen' && github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     environment: crates-io
+    env:
+      RELEASE_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -28,17 +35,165 @@ jobs:
         uses: Swatinem/rust-cache@v2
       - name: Install release-plz CLI
         run: cargo install release-plz --locked
-      - name: Set version
+      - name: Compute next version
+        id: version
         run: |
-          release-plz set-version \
-            barrzen-axum-core@${{ inputs.release_version }} \
-            barrzen-axum-infra@${{ inputs.release_version }} \
-            barrzen-axum-obs@${{ inputs.release_version }} \
-            barrzen-axum-openapi@${{ inputs.release_version }}
-      - name: Run release-plz (release)
-        uses: release-plz/action@v0.5
-        with:
-          command: release
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          bump = "${{ inputs.bump }}"
+          text = Path("Cargo.toml").read_text()
+          in_section = False
+          current = None
+          for line in text.splitlines():
+            if line.strip() == "[workspace.package]":
+              in_section = True
+              continue
+            if in_section and line.strip().startswith("[") and line.strip().endswith("]"):
+              break
+            if in_section and line.strip().startswith("version"):
+              match = re.search(r'"(\d+\.\d+\.\d+)"', line)
+              if match:
+                current = match.group(1)
+                break
+
+          if not current:
+            raise SystemExit("workspace.package version not found")
+
+          major, minor, patch = [int(x) for x in current.split(".")]
+          if bump == "major":
+            major += 1
+            minor = 0
+            patch = 0
+          elif bump == "minor":
+            minor += 1
+            patch = 0
+          elif bump == "patch":
+            patch += 1
+          else:
+            raise SystemExit(f"unsupported bump: {bump}")
+
+          new_version = f"{major}.{minor}.{patch}"
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+            handle.write(f"version={new_version}\n")
+          print(f"current={current}")
+          print(f"new={new_version}")
+          PY
+      - name: Collect workspace packages
+        id: packages
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          import subprocess
+
+          data = json.loads(
+              subprocess.check_output(
+                  ["cargo", "metadata", "--no-deps", "--format-version", "1"], text=True
+              )
+          )
+          members = set(data["workspace_members"])
+          names = [pkg["name"] for pkg in data["packages"] if pkg["id"] in members]
+          names.sort()
+
+          output = " ".join(names)
+          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as handle:
+            handle.write(f"packages={output}\n")
+
+          print(f"packages={output}")
+          PY
+      - name: Update changelogs from commits
+        run: release-plz update
+      - name: Set versions to manual bump
+        run: |
+          args=()
+          for pkg in ${{ steps.packages.outputs.packages }}; do
+            args+=("${pkg}@${{ steps.version.outputs.version }}")
+          done
+          release-plz set-version "${args[@]}"
+      - name: Sync workspace and internal dependency versions
+        run: |
+          python - <<'PY'
+          import os
+          import re
+          from pathlib import Path
+
+          version = "${{ steps.version.outputs.version }}"
+          workspace_packages = os.environ["WORKSPACE_PACKAGES"].split()
+
+          root = Path("Cargo.toml")
+          text = root.read_text()
+          lines = text.splitlines()
+          out = []
+          in_section = False
+          updated = False
+
+          for line in lines:
+            if line.strip() == "[workspace.package]":
+              in_section = True
+              out.append(line)
+              continue
+            if in_section and line.strip().startswith("[") and line.strip().endswith("]"):
+              in_section = False
+            if in_section and re.match(r"\s*version\s*=", line):
+              line = re.sub(r'"\d+\.\d+\.\d+"', f'"{version}"', line)
+              updated = True
+            out.append(line)
+
+          root.write_text("\n".join(out) + ("\n" if text.endswith("\n") else ""))
+          if not updated:
+            raise SystemExit("workspace.package version not updated")
+
+          for path in Path("crates").glob("*/Cargo.toml"):
+            content = path.read_text()
+            new_content = content
+            for name in workspace_packages:
+              pattern = rf'({re.escape(name)}\s*=\s*\{{[^}}]*?\bversion\s*=\s*")[^"]+(")'
+              new_content = re.sub(pattern, rf"\\1{version}\\2", new_content, flags=re.S)
+
+            lines = new_content.splitlines()
+            out_lines = []
+            current_dep = None
+            for line in lines:
+              stripped = line.strip()
+              match = re.match(r"\[([^\]]+)\]", stripped)
+              if match:
+                header = match.group(1)
+                current_dep = None
+                for name in workspace_packages:
+                  if header.endswith(f".{name}") and ".dependencies" in header:
+                    current_dep = name
+                    break
+              if current_dep and re.match(r"\s*version\s*=", line):
+                line = re.sub(r'"\d+\.\d+\.\d+"', f'"{version}"', line)
+              out_lines.append(line)
+
+            new_content = "\n".join(out_lines) + ("\n" if content.endswith("\n") else "")
+            if new_content != content:
+              path.write_text(new_content)
+          PY
         env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN || secrets.GITHUB_TOKEN }}
-          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+          WORKSPACE_PACKAGES: ${{ steps.packages.outputs.packages }}
+      - name: Update Cargo.lock
+        run: cargo check -p barrzen-axum-core -q
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git remote set-url origin https://x-access-token:${RELEASE_TOKEN}@github.com/${{ github.repository }}.git
+      - name: Commit release changes
+        run: |
+          if git diff --quiet; then
+            echo "No release changes to commit."
+            exit 1
+          fi
+          git add -A
+          git commit -m "chore: release v${{ steps.version.outputs.version }}"
+      - name: Push release commit
+        run: git push origin HEAD:main
+      - name: Create tag and GitHub release
+        env:
+          GITHUB_TOKEN: ${{ env.RELEASE_TOKEN }}
+        run: release-plz release

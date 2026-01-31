@@ -1,0 +1,87 @@
+name: publish
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  publish:
+    if: ${{ github.repository_owner == 'Barrzen' }}
+    runs-on: ubuntu-latest
+    environment: crates-io
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+      - name: Cache cargo
+        uses: Swatinem/rust-cache@v2
+      - name: Publish crates to crates.io
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          publish_crate() {
+            local crate="$1"
+            local attempts=5
+            local wait_seconds=30
+
+            for attempt in $(seq 1 "${attempts}"); do
+              if cargo publish -p "${crate}" --locked; then
+                return 0
+              fi
+              echo "Publish failed for ${crate}. Attempt ${attempt}/${attempts}. Retrying in ${wait_seconds}s..."
+              sleep "${wait_seconds}"
+            done
+
+            echo "Publish failed for ${crate} after ${attempts} attempts."
+            return 1
+          }
+
+          publish_order=$(python - <<'PY'
+          import json
+          import subprocess
+
+          data = json.loads(
+              subprocess.check_output(["cargo", "metadata", "--format-version", "1"], text=True)
+          )
+          members = set(data["workspace_members"])
+          packages = [pkg for pkg in data["packages"] if pkg["id"] in members]
+          names = {pkg["name"] for pkg in packages}
+
+          deps = {name: set() for name in names}
+          for pkg in packages:
+            name = pkg["name"]
+            for dep in pkg["dependencies"]:
+              dep_name = dep["name"]
+              if dep_name in names:
+                deps[name].add(dep_name)
+
+          order = []
+          ready = sorted([name for name, reqs in deps.items() if not reqs])
+          while ready:
+            current = ready.pop(0)
+            order.append(current)
+            for name in sorted(deps.keys()):
+              if current in deps[name]:
+                deps[name].remove(current)
+                if not deps[name]:
+                  ready.append(name)
+
+          if len(order) != len(names):
+            missing = names - set(order)
+            raise SystemExit(f"Cycle or missing packages: {sorted(missing)}")
+
+          print(" ".join(order))
+          PY
+          )
+
+          for crate in ${publish_order}; do
+            publish_crate "${crate}"
+          done
