@@ -151,7 +151,12 @@ jobs:
             new_content = content
             for name in workspace_packages:
               pattern = rf'({re.escape(name)}\s*=\s*\{{[^}}]*?\bversion\s*=\s*")[^"]+(")'
-              new_content = re.sub(pattern, rf"\\1{version}\\2", new_content, flags=re.S)
+              new_content = re.sub(
+                pattern,
+                lambda match: f"{match.group(1)}{version}{match.group(2)}",
+                new_content,
+                flags=re.S,
+              )
 
             lines = new_content.splitlines()
             out_lines = []
@@ -167,7 +172,11 @@ jobs:
                     current_dep = name
                     break
               if current_dep and re.match(r"\s*version\s*=", line):
-                line = re.sub(r'"\d+\.\d+\.\d+"', f'"{version}"', line)
+                line = re.sub(
+                  r'"\d+\.\d+\.\d+"',
+                  lambda match: f'"{version}"',
+                  line,
+                )
               out_lines.append(line)
 
             new_content = "\n".join(out_lines) + ("\n" if content.endswith("\n") else "")
