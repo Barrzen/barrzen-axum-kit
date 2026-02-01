@@ -85,6 +85,16 @@ cargo clippy --all-targets -- -D warnings
 
 Example: You can compile with `db` feature but set `FEATURE_DB=false` to skip database initialization.
 
+## Logging
+
+- Default `LOG_FORMAT` is `compact` (single‑line, no color).
+- Set `LOG_FORMAT=pretty` or `LOG_FORMAT=json` if you prefer those formats.
+
+## Banner
+
+- Set `BANNER_SHOW_ENV_VARS=true` to print all environment variables in the startup banner.
+- Set `BANNER_SHOW_SECRETS=true` to print full values (otherwise values are redacted).
+
 ## CI/CD
 
 Deny warnings in CI:

@@ -18,73 +18,111 @@ pub fn print_banner(config: &Config, build: &super::BuildInfo) {
 
     println!();
     println!("╔══════════════════════════════════════════════════════════════╗");
-    println!("║            🦀  Barrzen AXUM APPLICATION  🦀                   ║");
+    println!("║            🦀  Barrzen AXUM APPLICATION  🦀");
     println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  Version: {:<51} ║", format!("{version} ({git_hash})"));
-    println!("║  App:     {:<51} ║", config.app.app_name);
+    println!("║  Version: {}", format!("{version} ({git_hash})"));
+    println!("║  App:     {}", config.app.app_name);
     println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  ENVIRONMENT                                                 ║");
+    println!("║  ENVIRONMENT");
     println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  Env:     {:<51} ║", env_badge(config.app.app_env));
+    println!("║  Env:     {}", env_badge(config.app.app_env));
+    println!("║  Debug:   {}", bool_indicator(config.app.app_debug));
+    println!("║  Address: {}", config.socket_addr());
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  FEATURES");
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  Database:    {}", feature_status(config.features.feature_db));
     println!(
-        "║  Debug:   {:<51} ║",
-        bool_indicator(config.app.app_debug)
-    );
-    println!("║  Address: {:<51} ║", config.socket_addr());
-    println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  FEATURES                                                    ║");
-    println!("╠══════════════════════════════════════════════════════════════╣");
-    println!(
-        "║  Database:    {:<47} ║",
-        feature_status(config.features.feature_db)
-    );
-    println!(
-        "║  Cache:       {:<47} ║",
+        "║  Cache:       {}",
         if config.features.feature_cache {
             format!("✅ ON ({})", config.cache.cache_backend)
         } else {
             "❌ OFF".to_string()
         }
     );
-    println!(
-        "║  Search:      {:<47} ║",
-        feature_status(config.features.feature_search)
-    );
-    println!(
-        "║  Broker:      {:<47} ║",
-        feature_status(config.features.feature_broker)
-    );
-    println!(
-        "║  OpenAPI:     {:<47} ║",
-        feature_status(config.features.feature_openapi)
-    );
-    println!(
-        "║  OTEL:        {:<47} ║",
-        feature_status(config.features.feature_otel)
-    );
+    println!("║  Search:      {}", feature_status(config.features.feature_search));
+    println!("║  Broker:      {}", feature_status(config.features.feature_broker));
+    println!("║  OpenAPI:     {}", feature_status(config.features.feature_openapi));
+    println!("║  OTEL:        {}", feature_status(config.features.feature_otel));
     println!("╠══════════════════════════════════════════════════════════════╣");
-    println!("║  HTTP                                                        ║");
+    println!("║  HTTP");
     println!("╠══════════════════════════════════════════════════════════════╣");
     println!(
-        "║  Request Log: {:<47} ║",
+        "║  Request Log: {}",
         bool_indicator(config.features.feature_request_log)
     );
+    println!("║  Tracing:     {}", bool_indicator(config.features.feature_tracing));
+    println!("║  CORS:        {}", bool_indicator(config.features.feature_cors));
     println!(
-        "║  Tracing:     {:<47} ║",
-        bool_indicator(config.features.feature_tracing)
-    );
-    println!(
-        "║  CORS:        {:<47} ║",
-        bool_indicator(config.features.feature_cors)
-    );
-    println!(
-        "║  Body Limit:  {:<47} ║",
+        "║  Body Limit:  {}",
         format_bytes(config.http.http_body_limit_bytes)
     );
     println!(
-        "║  Timeout:     {:<47} ║",
+        "║  Timeout:     {}",
         format!("{}s", config.http.http_request_timeout_seconds)
     );
+
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    println!("║  ENV VARS");
+    println!("╠══════════════════════════════════════════════════════════════╣");
+    if config.banner.banner_show_env_vars {
+        let allowlist = config
+            .banner
+            .banner_env_allowlist
+            .as_ref()
+            .map(|list| {
+                list.split(',')
+                    .map(|v| v.trim().to_string())
+                    .filter(|v| !v.is_empty())
+                    .collect::<std::collections::HashSet<String>>()
+            });
+
+        let prefixes = [
+            "APP_",
+            "FEATURE_",
+            "LOG_",
+            "REQUEST_LOG_",
+            "HTTP_",
+            "DB_",
+            "CACHE_",
+            "MEILI_",
+            "BROKER_",
+            "NATS_",
+            "IGGY_",
+            "FLUVIO_",
+            "CORS_",
+            "SESSION_",
+            "OTEL_",
+            "BANNER_",
+        ];
+
+        let mut vars: Vec<(String, String)> = std::env::vars()
+            .filter(|(key, _)| {
+                if let Some(allowlist) = &allowlist {
+                    allowlist.contains(key)
+                } else {
+                    prefixes.iter().any(|prefix| key.starts_with(prefix))
+                }
+            })
+            .collect();
+        vars.sort_by(|a, b| a.0.cmp(&b.0));
+
+        if vars.is_empty() {
+            println!("║  (no matching env vars)");
+        } else {
+            for (key, value) in vars {
+                let display_value = if config.banner.banner_show_secrets {
+                    value
+                } else {
+                    crate::config::redact_secret(&value)
+                };
+                println!("║  {}={}", key, display_value);
+            }
+        }
+    } else {
+        println!("║  (disabled — set BANNER_SHOW_ENV_VARS=true)");
+    }
+
     println!("╚══════════════════════════════════════════════════════════════╝");
     println!();
 }

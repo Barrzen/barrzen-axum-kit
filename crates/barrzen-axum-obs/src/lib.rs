@@ -27,8 +27,6 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
     // Console layer
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_target(config.logging.log_include_target)
-        .with_file(config.logging.log_include_fileline)
-        .with_line_number(config.logging.log_include_fileline)
         .with_span_events(FmtSpan::NONE);
 
     // Apply format
@@ -36,7 +34,12 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
 
     match config.logging.log_format {
         LogFormat::Pretty => {
-            let registry = registry.with(fmt_layer.pretty());
+            let registry = registry.with(
+                fmt_layer
+                    .pretty()
+                    .with_file(config.logging.log_include_fileline)
+                    .with_line_number(config.logging.log_include_fileline),
+            );
             
             #[cfg(feature = "otel")]
             if config.features.feature_otel {
@@ -47,8 +50,31 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
 
             registry.try_init()?;
         }
+        LogFormat::Compact => {
+            let registry = registry.with(
+                fmt_layer
+                    .compact()
+                    .with_ansi(false)
+                    .with_file(config.logging.log_include_fileline)
+                    .with_line_number(config.logging.log_include_fileline),
+            );
+
+            #[cfg(feature = "otel")]
+            if config.features.feature_otel {
+                let otel_layer = init_otel_layer(config)?;
+                registry.with(otel_layer).try_init()?;
+                return Ok(());
+            }
+
+            registry.try_init()?;
+        }
         LogFormat::Json => {
-            let registry = registry.with(fmt_layer.json());
+            let registry = registry.with(
+                fmt_layer
+                    .json()
+                    .with_file(config.logging.log_include_fileline)
+                    .with_line_number(config.logging.log_include_fileline),
+            );
 
             #[cfg(feature = "otel")]
             if config.features.feature_otel {
