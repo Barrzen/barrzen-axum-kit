@@ -3,9 +3,11 @@
 //! Provides a builder pattern for constructing Axum applications.
 
 use std::sync::Arc;
+use std::time::Duration;
 
 use axum::{
     http::{HeaderName, HeaderValue},
+    http::{Request, Response},
     Router,
 };
 use tokio::net::TcpListener;
@@ -23,6 +25,7 @@ use crate::{
     handlers::{self, CoreState, ReadyChecker},
     BuildInfo,
 };
+use tracing::Span;
 
 /// Header name for request ID
 pub static REQUEST_ID_HEADER: HeaderName = HeaderName::from_static("x-request-id");
@@ -158,7 +161,33 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
 
     // Tracing layer (conditional)
     let router = if config.features.feature_tracing {
-        router.layer(TraceLayer::new_for_http())
+        if config.features.feature_request_log {
+            let trace_layer = TraceLayer::new_for_http()
+                .make_span_with(|req: &Request<_>| {
+                    let request_id = req
+                        .headers()
+                        .get(&REQUEST_ID_HEADER)
+                        .and_then(|v| v.to_str().ok())
+                        .unwrap_or("");
+                    tracing::info_span!(
+                        "request",
+                        request_id = %request_id,
+                        method = %req.method(),
+                        path = %req.uri().path()
+                    )
+                })
+                .on_response(|res: &Response<_>, latency: Duration, span: &Span| {
+                    tracing::info!(
+                        parent: span,
+                        status = res.status().as_u16(),
+                        latency_ms = latency.as_millis() as u64,
+                        "request completed"
+                    );
+                });
+            router.layer(trace_layer)
+        } else {
+            router.layer(TraceLayer::new_for_http())
+        }
     } else {
         router
     };
