@@ -17,6 +17,7 @@ pub struct CorsConfig {
     pub cors_allow_headers: String,
 
     #[serde(default)]
+    #[serde(deserialize_with = "crate::config::de_bool")]
     pub cors_allow_credentials: bool,
 
     #[serde(default = "default_cors_max_age")]

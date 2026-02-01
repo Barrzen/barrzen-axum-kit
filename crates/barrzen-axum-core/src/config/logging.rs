@@ -14,9 +14,11 @@ pub struct LoggingConfig {
     pub log_format: LogFormat,
 
     #[serde(default)]
+    #[serde(deserialize_with = "crate::config::de_bool")]
     pub log_include_target: bool,
 
     #[serde(default)]
+    #[serde(deserialize_with = "crate::config::de_bool")]
     pub log_include_fileline: bool,
 
     #[serde(default, deserialize_with = "empty_string_as_none")]

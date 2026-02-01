@@ -159,6 +159,47 @@ de_number!(de_u16, u16);
 de_number!(de_u64, u64);
 de_number!(de_usize, usize);
 
+pub(crate) fn de_bool<'de, D>(deserializer: D) -> Result<bool, D::Error>
+where
+    D: serde::Deserializer<'de>,
+{
+    struct Visitor;
+    impl<'de> serde::de::Visitor<'de> for Visitor {
+        type Value = bool;
+
+        fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            formatter.write_str("a boolean or boolean string")
+        }
+
+        fn visit_bool<E>(self, v: bool) -> Result<bool, E>
+        where
+            E: serde::de::Error,
+        {
+            Ok(v)
+        }
+
+        fn visit_str<E>(self, v: &str) -> Result<bool, E>
+        where
+            E: serde::de::Error,
+        {
+            match v.trim().to_lowercase().as_str() {
+                "true" | "1" | "yes" | "y" | "on" => Ok(true),
+                "false" | "0" | "no" | "n" | "off" => Ok(false),
+                _ => Err(E::custom("invalid boolean string")),
+            }
+        }
+
+        fn visit_string<E>(self, v: String) -> Result<bool, E>
+        where
+            E: serde::de::Error,
+        {
+            self.visit_str(&v)
+        }
+    }
+
+    deserializer.deserialize_any(Visitor)
+}
+
 /// Deserializer helper: treat empty strings as None
 pub(crate) fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
