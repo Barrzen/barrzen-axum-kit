@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.6](https://github.com/Barrzen/barrzen-axum-kit/compare/barrzen-axum-obs-v0.1.5...barrzen-axum-obs-v0.1.6) - 2026-02-01
+
+### Other
+
+- updated the following local packages: barrzen-axum-core
+
 ## [0.1.5](https://github.com/Barrzen/barrzen-axum-kit/compare/barrzen-axum-obs-v0.1.4...barrzen-axum-obs-v0.1.5) - 2026-02-01
 
 ### Other
