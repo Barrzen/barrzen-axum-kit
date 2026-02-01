@@ -273,7 +273,7 @@ dependencies = [
 
 [[package]]
 name = "barrzen-axum-core"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -297,7 +297,7 @@ dependencies = [
 
 [[package]]
 name = "barrzen-axum-infra"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "async-nats",
@@ -314,7 +314,7 @@ dependencies = [
 
 [[package]]
 name = "barrzen-axum-obs"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "anyhow",
  "barrzen-axum-core",
@@ -330,7 +330,7 @@ dependencies = [
 
 [[package]]
 name = "barrzen-axum-openapi"
-version = "0.1.4"
+version = "0.1.5"
 dependencies = [
  "axum",
  "tokio",
