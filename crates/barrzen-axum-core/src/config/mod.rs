@@ -17,7 +17,7 @@ pub use cache::{CacheBackend, CacheConfig};
 pub use cors::CorsConfig;
 pub use features::FeatureFlags;
 pub use http::HttpConfig;
-pub use logging::{LogFormat, LoggingConfig};
+pub use logging::{LogBackend, LogFormat, LoggingConfig};
 
 use serde::Deserialize;
 

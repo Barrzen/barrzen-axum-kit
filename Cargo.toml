@@ -46,6 +46,8 @@ async-trait = "0.1"
 # Logging / Tracing
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+log = "0.4"
+fast_log = "1.7.7"
 
 # Utilities
 uuid = { version = "1", features = ["v4"] }

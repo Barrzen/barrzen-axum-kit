@@ -19,7 +19,7 @@ pub use app_builder::AppBuilder;
 pub use build_info::BuildInfo;
 pub use config::{
     AppConfig, BannerConfig, CacheBackend, CacheConfig, Config, ConfigError, CorsConfig,
-    Environment, FeatureFlags, HttpConfig, LogFormat, LoggingConfig,
+    Environment, FeatureFlags, HttpConfig, LogBackend, LogFormat, LoggingConfig,
 };
 pub use handlers::{CoreState, HealthCheck, ReadyChecker};
 pub use response::{ApiError, ApiResponse, ApiResult};
@@ -33,6 +33,7 @@ mod tests {
         // Basic smoke test - verify re-exports work
         let _ = Environment::Dev;
         let _ = LogFormat::Pretty;
+        let _ = LogBackend::Tracing;
         let _ = CacheBackend::Moka;
         let _ = BuildInfo::default();
     }
