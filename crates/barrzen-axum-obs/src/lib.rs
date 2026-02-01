@@ -29,7 +29,7 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
         .with_target(config.logging.log_include_target)
         .with_file(config.logging.log_include_fileline)
         .with_line_number(config.logging.log_include_fileline)
-        .with_span_events(FmtSpan::CLOSE);
+        .with_span_events(FmtSpan::NONE);
 
     // Apply format
     let registry = tracing_subscriber::registry().with(env_filter);
