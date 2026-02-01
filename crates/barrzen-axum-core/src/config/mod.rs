@@ -102,6 +102,63 @@ pub fn redact_secret(value: &str) -> String {
     }
 }
 
+macro_rules! de_number {
+    ($name:ident, $ty:ty) => {
+        pub(crate) fn $name<'de, D>(deserializer: D) -> Result<$ty, D::Error>
+        where
+            D: serde::Deserializer<'de>,
+        {
+            struct Visitor;
+            impl<'de> serde::de::Visitor<'de> for Visitor {
+                type Value = $ty;
+
+                fn expecting(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                    formatter.write_str("a number or numeric string")
+                }
+
+                fn visit_u64<E>(self, v: u64) -> Result<$ty, E>
+                where
+                    E: serde::de::Error,
+                {
+                    <$ty>::try_from(v).map_err(|_| E::custom("out of range"))
+                }
+
+                fn visit_i64<E>(self, v: i64) -> Result<$ty, E>
+                where
+                    E: serde::de::Error,
+                {
+                    if v < 0 {
+                        return Err(E::custom("negative value not allowed"));
+                    }
+                    <$ty>::try_from(v as u64).map_err(|_| E::custom("out of range"))
+                }
+
+                fn visit_str<E>(self, v: &str) -> Result<$ty, E>
+                where
+                    E: serde::de::Error,
+                {
+                    v.trim()
+                        .parse::<$ty>()
+                        .map_err(|_| E::custom("invalid numeric string"))
+                }
+
+                fn visit_string<E>(self, v: String) -> Result<$ty, E>
+                where
+                    E: serde::de::Error,
+                {
+                    self.visit_str(&v)
+                }
+            }
+
+            deserializer.deserialize_any(Visitor)
+        }
+    };
+}
+
+de_number!(de_u16, u16);
+de_number!(de_u64, u64);
+de_number!(de_usize, usize);
+
 /// Deserializer helper: treat empty strings as None
 pub(crate) fn empty_string_as_none<'de, D>(deserializer: D) -> Result<Option<String>, D::Error>
 where
