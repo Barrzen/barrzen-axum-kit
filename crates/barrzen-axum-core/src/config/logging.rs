@@ -33,6 +33,7 @@ pub struct LoggingConfig {
 #[serde(rename_all = "lowercase")]
 pub enum LogFormat {
     #[default]
+    Compact,
     Pretty,
     Json,
 }

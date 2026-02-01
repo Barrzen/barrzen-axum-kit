@@ -2,15 +2,21 @@
 //!
 //! Provides a builder pattern for constructing Axum applications.
 
-use std::sync::Arc;
-use std::time::Duration;
+use std::{
+    future::Future,
+    pin::Pin,
+    sync::Arc,
+    task::{Context, Poll},
+    time::Instant,
+};
 
 use axum::{
     http::{HeaderName, HeaderValue},
-    http::{Request, Response},
+    http::Request,
     Router,
 };
 use tokio::net::TcpListener;
+use tower::{Layer, Service};
 use tower_http::{
     compression::CompressionLayer,
     limit::RequestBodyLimitLayer,
@@ -25,8 +31,6 @@ use crate::{
     handlers::{self, CoreState, ReadyChecker},
     BuildInfo,
 };
-use tracing::Span;
-
 /// Header name for request ID
 pub static REQUEST_ID_HEADER: HeaderName = HeaderName::from_static("x-request-id");
 
@@ -161,33 +165,20 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
 
     // Tracing layer (conditional)
     let router = if config.features.feature_tracing {
-        if config.features.feature_request_log {
-            let trace_layer = TraceLayer::new_for_http()
-                .make_span_with(|req: &Request<_>| {
-                    let request_id = req
-                        .headers()
-                        .get(&REQUEST_ID_HEADER)
-                        .and_then(|v| v.to_str().ok())
-                        .unwrap_or("");
-                    tracing::info_span!(
-                        "request",
-                        request_id = %request_id,
-                        method = %req.method(),
-                        path = %req.uri().path()
-                    )
-                })
-                .on_response(|res: &Response<_>, latency: Duration, span: &Span| {
-                    tracing::info!(
-                        parent: span,
-                        status = res.status().as_u16(),
-                        latency_ms = latency.as_millis() as u64,
-                        "request completed"
-                    );
-                });
-            router.layer(trace_layer)
-        } else {
-            router.layer(TraceLayer::new_for_http())
-        }
+        // Keep spans for tracing, but disable default response logs to avoid duplicates.
+        router.layer(
+            TraceLayer::new_for_http()
+                .on_request(())
+                .on_response(())
+                .on_failure(()),
+        )
+    } else {
+        router
+    };
+
+    // Request logging (conditional)
+    let router = if config.features.feature_request_log {
+        router.layer(RequestLogLayer)
     } else {
         router
     };
@@ -203,6 +194,67 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
     ));
 
     router
+}
+
+#[derive(Clone, Copy)]
+struct RequestLogLayer;
+
+impl<S> Layer<S> for RequestLogLayer {
+    type Service = RequestLogService<S>;
+
+    fn layer(&self, inner: S) -> Self::Service {
+        RequestLogService { inner }
+    }
+}
+
+#[derive(Clone)]
+struct RequestLogService<S> {
+    inner: S,
+}
+
+impl<S, B> Service<Request<B>> for RequestLogService<S>
+where
+    S: Service<Request<B>, Response = axum::response::Response> + Clone + Send + 'static,
+    S::Future: Send + 'static,
+    B: Send + 'static,
+{
+    type Response = S::Response;
+    type Error = S::Error;
+    type Future = Pin<Box<dyn Future<Output = Result<Self::Response, Self::Error>> + Send>>;
+
+    fn poll_ready(&mut self, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        self.inner.poll_ready(cx)
+    }
+
+    fn call(&mut self, req: Request<B>) -> Self::Future {
+        let mut inner = self.inner.clone();
+
+        let method = req.method().clone();
+        let path = req.uri().path().to_string();
+        let request_id = req
+            .headers()
+            .get(&REQUEST_ID_HEADER)
+            .and_then(|v| v.to_str().ok())
+            .unwrap_or("")
+            .to_string();
+        let start = Instant::now();
+
+        Box::pin(async move {
+            let response = inner.call(req).await?;
+            let latency_ms = start.elapsed().as_millis() as u64;
+
+            tracing::info!(
+                request_id = %request_id,
+                method = %method,
+                path = %path,
+                status = response.status().as_u16(),
+                latency_ms = latency_ms,
+                "request completed"
+            );
+
+            Ok(response)
+        })
+    }
 }
 
 /// Apply security-related response headers
