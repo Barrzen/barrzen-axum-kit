@@ -19,6 +19,7 @@ pub struct AppConfig {
     pub app_port: u16,
 
     #[serde(default)]
+    #[serde(deserialize_with = "crate::config::de_bool")]
     pub app_debug: bool,
 
     #[serde(default = "default_shutdown_grace")]
