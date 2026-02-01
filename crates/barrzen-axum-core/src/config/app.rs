@@ -15,12 +15,14 @@ pub struct AppConfig {
     pub app_host: String,
 
     #[serde(default = "default_port")]
+    #[serde(deserialize_with = "crate::config::de_u16")]
     pub app_port: u16,
 
     #[serde(default)]
     pub app_debug: bool,
 
     #[serde(default = "default_shutdown_grace")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub app_shutdown_grace_seconds: u64,
 }
 

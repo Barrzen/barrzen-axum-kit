@@ -20,6 +20,7 @@ pub struct CorsConfig {
     pub cors_allow_credentials: bool,
 
     #[serde(default = "default_cors_max_age")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub cors_max_age_seconds: u64,
 }
 

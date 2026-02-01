@@ -11,18 +11,22 @@ pub struct CacheConfig {
     pub cache_backend: CacheBackend,
 
     #[serde(default = "default_cache_ttl")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub cache_ttl_seconds: u64,
 
     #[serde(default = "default_cache_max_entries")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub cache_max_entries: u64,
 
     #[serde(default, deserialize_with = "empty_string_as_none")]
     pub cache_redis_url: Option<String>,
 
     #[serde(default = "default_redis_pool_size")]
+    #[serde(deserialize_with = "crate::config::de_usize")]
     pub cache_redis_pool_size: usize,
 
     #[serde(default = "default_connect_timeout")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub cache_redis_connect_timeout_seconds: u64,
 }
 

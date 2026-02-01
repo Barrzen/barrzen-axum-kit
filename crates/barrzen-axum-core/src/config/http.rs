@@ -7,9 +7,11 @@ use std::time::Duration;
 #[derive(Debug, Clone, Deserialize)]
 pub struct HttpConfig {
     #[serde(default = "default_body_limit")]
+    #[serde(deserialize_with = "crate::config::de_usize")]
     pub http_body_limit_bytes: usize,
 
     #[serde(default = "default_request_timeout")]
+    #[serde(deserialize_with = "crate::config::de_u64")]
     pub http_request_timeout_seconds: u64,
 }
 
