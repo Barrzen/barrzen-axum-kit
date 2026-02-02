@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.7](https://github.com/Barrzen/barrzen-axum-kit/compare/v0.1.6...v0.1.7) - 2026-02-02
+
+### Added
+
+- *(obs)* add fast_log backend toggle ([#14](https://github.com/Barrzen/barrzen-axum-kit/pull/14))
+- compact logging default and banner env filtering ([#13](https://github.com/Barrzen/barrzen-axum-kit/pull/13))
+
+### Fixed
+
+- request log banner ([#12](https://github.com/Barrzen/barrzen-axum-kit/pull/12))
+
 ## [0.1.6](https://github.com/Barrzen/barrzen-axum-kit/compare/v0.1.5...v0.1.6) - 2026-02-01
 
 ### Fixed
