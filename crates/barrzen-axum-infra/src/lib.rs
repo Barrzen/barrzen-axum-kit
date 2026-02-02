@@ -174,7 +174,9 @@ async fn init_db(_config: &Config) -> anyhow::Result<sea_orm::DatabaseConnection
     // Assuming config might have it or we load it from env directly since it's sensitive.
     // Core config didn't have specific DB config struct yet.
     // For now, let's assume DATABASE_URL env var.
-    let url = std::env::var("DATABASE_URL").context("DATABASE_URL must be set")?;
+    let url = std::env::var("DATABASE_URL")
+        .or_else(|_| std::env::var("DB_URL"))
+        .context("DATABASE_URL or DB_URL must be set")?;
     
     let mut opt = ConnectOptions::new(url);
     opt.max_connections(100)
