@@ -27,7 +27,7 @@ use tower_http::{
 };
 
 use crate::{
-    config::Config,
+    config::{Config, LogBackend},
     handlers::{self, CoreState, ReadyChecker},
     BuildInfo,
 };
@@ -178,7 +178,7 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
 
     // Request logging (conditional)
     let router = if config.features.feature_request_log {
-        router.layer(RequestLogLayer)
+        router.layer(RequestLogLayer::new(config.logging.log_backend))
     } else {
         router
     };
@@ -197,19 +197,31 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
 }
 
 #[derive(Clone, Copy)]
-struct RequestLogLayer;
+struct RequestLogLayer {
+    backend: LogBackend,
+}
+
+impl RequestLogLayer {
+    fn new(backend: LogBackend) -> Self {
+        Self { backend }
+    }
+}
 
 impl<S> Layer<S> for RequestLogLayer {
     type Service = RequestLogService<S>;
 
     fn layer(&self, inner: S) -> Self::Service {
-        RequestLogService { inner }
+        RequestLogService {
+            inner,
+            backend: self.backend,
+        }
     }
 }
 
 #[derive(Clone)]
 struct RequestLogService<S> {
     inner: S,
+    backend: LogBackend,
 }
 
 impl<S, B> Service<Request<B>> for RequestLogService<S>
@@ -228,6 +240,7 @@ where
 
     fn call(&mut self, req: Request<B>) -> Self::Future {
         let mut inner = self.inner.clone();
+        let backend = self.backend;
 
         let method = req.method().clone();
         let path = req.uri().path().to_string();
@@ -243,14 +256,28 @@ where
             let response = inner.call(req).await?;
             let latency_ms = start.elapsed().as_millis() as u64;
 
-            tracing::info!(
-                request_id = %request_id,
-                method = %method,
-                path = %path,
-                status = response.status().as_u16(),
-                latency_ms = latency_ms,
-                "request completed"
-            );
+            match backend {
+                LogBackend::Tracing => {
+                    tracing::info!(
+                        request_id = %request_id,
+                        method = %method,
+                        path = %path,
+                        status = response.status().as_u16(),
+                        latency_ms = latency_ms,
+                        "request completed"
+                    );
+                }
+                LogBackend::FastLog => {
+                    log::info!(
+                        "request completed request_id={} method={} path={} status={} latency_ms={}",
+                        request_id,
+                        method,
+                        path,
+                        response.status().as_u16(),
+                        latency_ms
+                    );
+                }
+            }
 
             Ok(response)
         })

@@ -283,6 +283,7 @@ dependencies = [
  "dotenvy",
  "envy",
  "http",
+ "log",
  "serde",
  "serde_json",
  "thiserror 2.0.18",

@@ -38,6 +38,7 @@ async-trait.workspace = true
 # Logging / Tracing
 tracing = { workspace = true }
 tracing-subscriber = { workspace = true }
+log = { workspace = true }
 
 # Utilities
 uuid = { workspace = true }

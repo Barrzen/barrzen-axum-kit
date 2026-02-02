@@ -26,6 +26,9 @@
 - Compile-time cargo features control what code is built; runtime flags decide what is initialized.
 - Logging supports `LOG_BACKEND=tracing|fast_log`; fast_log is incompatible with `FEATURE_OTEL=true`.
 
+## Workflow note
+- After each commit and push, switch to a fresh branch based on `origin/main`.
+
 ## Known gaps / improvement targets
 - `HttpConfig::http_request_timeout_seconds` is not enforced by a timeout layer.
 - `CorsConfig` exists but no CORS middleware is applied.
