@@ -11,6 +11,9 @@ pub struct LoggingConfig {
     pub log_level: String,
 
     #[serde(default)]
+    pub log_backend: LogBackend,
+
+    #[serde(default)]
     pub log_format: LogFormat,
 
     #[serde(default)]
@@ -36,6 +39,16 @@ pub enum LogFormat {
     Compact,
     Pretty,
     Json,
+}
+
+/// Log backend type
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum LogBackend {
+    #[default]
+    Tracing,
+    #[serde(rename = "fast_log")]
+    FastLog,
 }
 
 fn default_log_level() -> String {

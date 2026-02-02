@@ -2,7 +2,7 @@
 //!
 //! Handles tracing setup and OpenTelemetry integration.
 
-use barrzen_axum_core::{Config, LogFormat};
+use barrzen_axum_core::{Config, LogBackend, LogFormat};
 use tracing_subscriber::{
     fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt, EnvFilter,
 };
@@ -20,10 +20,29 @@ static OTEL_PROVIDER: OnceLock<opentelemetry_sdk::trace::SdkTracerProvider> = On
 /// # Errors
 /// Returns error if tracing subscriber setup fails.
 pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
-    // Basic EnvFilter
-    let env_filter = EnvFilter::try_from_default_env()
-        .unwrap_or_else(|_| EnvFilter::new(&config.logging.log_level));
+    match config.logging.log_backend {
+        LogBackend::Tracing => {
+            let env_filter = EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| EnvFilter::new(&config.logging.log_level));
+            init_tracing_subscriber(config, env_filter)
+        }
+        LogBackend::FastLog => init_fast_log(config),
+    }
+}
 
+/// Shutdown observability
+///
+/// Flushes pending spans (relevant for OTEL).
+pub fn shutdown() {
+    #[cfg(feature = "otel")]
+    {
+        if let Some(provider) = OTEL_PROVIDER.get() {
+            let _ = provider.shutdown();
+        }
+    }
+}
+
+fn init_tracing_subscriber(config: &Config, env_filter: EnvFilter) -> anyhow::Result<()> {
     // Console layer
     let fmt_layer = tracing_subscriber::fmt::layer()
         .with_target(config.logging.log_include_target)
@@ -40,7 +59,7 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
                     .with_file(config.logging.log_include_fileline)
                     .with_line_number(config.logging.log_include_fileline),
             );
-            
+
             #[cfg(feature = "otel")]
             if config.features.feature_otel {
                 let otel_layer = init_otel_layer(config)?;
@@ -90,15 +109,65 @@ pub fn init_tracing(config: &Config) -> anyhow::Result<()> {
     Ok(())
 }
 
-/// Shutdown observability
-///
-/// Flushes pending spans (relevant for OTEL).
-pub fn shutdown() {
-    #[cfg(feature = "otel")]
+fn init_fast_log(config: &Config) -> anyhow::Result<()> {
+    #[cfg(feature = "fast-log")]
     {
-        if let Some(provider) = OTEL_PROVIDER.get() {
-            let _ = provider.shutdown();
+        use fast_log::config::Config as FastLogConfig;
+
+        if config.features.feature_otel {
+            anyhow::bail!("LOG_BACKEND=fast_log is not compatible with FEATURE_OTEL=true");
         }
+
+        if let Err(err) = fast_log::init(FastLogConfig::new().console()) {
+            let message = err.to_string();
+            if message.contains("logging system was already initialized") {
+                anyhow::bail!("fast_log init failed because another logger is already set. Ensure init_tracing runs before any other logger initialization.");
+            }
+            return Err(err.into());
+        }
+        log::set_max_level(resolve_log_level(config));
+        return Ok(());
+    }
+
+    #[cfg(not(feature = "fast-log"))]
+    {
+        let _ = config;
+        anyhow::bail!("LOG_BACKEND=fast_log requires the \"fast-log\" feature on barrzen-axum-obs")
+    }
+}
+
+#[cfg(feature = "fast-log")]
+fn resolve_log_level(config: &Config) -> log::LevelFilter {
+    let mut level = parse_log_level(&config.logging.log_level).unwrap_or(log::LevelFilter::Info);
+
+    if let Ok(rust_log) = std::env::var("RUST_LOG") {
+        for directive in rust_log.split(',') {
+            let directive = directive.trim();
+            if directive.is_empty() {
+                continue;
+            }
+            let level_str = directive
+                .split_once('=')
+                .map_or(directive, |(_, level)| level);
+            if let Some(parsed) = parse_log_level(level_str) {
+                level = level.max(parsed);
+            }
+        }
+    }
+
+    level
+}
+
+#[cfg(feature = "fast-log")]
+fn parse_log_level(value: &str) -> Option<log::LevelFilter> {
+    match value.trim().to_lowercase().as_str() {
+        "off" => Some(log::LevelFilter::Off),
+        "error" => Some(log::LevelFilter::Error),
+        "warn" | "warning" => Some(log::LevelFilter::Warn),
+        "info" => Some(log::LevelFilter::Info),
+        "debug" => Some(log::LevelFilter::Debug),
+        "trace" => Some(log::LevelFilter::Trace),
+        _ => None,
     }
 }
 

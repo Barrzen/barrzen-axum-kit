@@ -23,6 +23,9 @@ otel = [
     "tonic",
 ]
 
+# Fast logger backend (log crate + fast_log)
+fast-log = ["fast_log", "log", "tracing/log"]
+
 [dependencies]
 # Core (for config types)
 barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.6" }
@@ -33,6 +36,8 @@ anyhow.workspace = true
 # Tracing (always needed)
 tracing.workspace = true
 tracing-subscriber.workspace = true
+log = { workspace = true, optional = true }
+fast_log = { workspace = true, optional = true }
 
 # Optional: OpenTelemetry
 opentelemetry = { workspace = true, optional = true }

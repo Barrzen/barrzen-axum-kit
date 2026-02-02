@@ -89,6 +89,10 @@ Example: You can compile with `db` feature but set `FEATURE_DB=false` to skip da
 
 - Default `LOG_FORMAT` is `compact` (single‑line, no color).
 - Set `LOG_FORMAT=pretty` or `LOG_FORMAT=json` if you prefer those formats.
+- Default `LOG_BACKEND` is `tracing`.
+- Set `LOG_BACKEND=fast_log` to use fast_log (requires the `fast-log` feature on `barrzen-axum-obs`).
+- `LOG_FORMAT` only applies to the `tracing` backend and is ignored by `fast_log`.
+- `fast_log` is not compatible with `FEATURE_OTEL=true`.
 
 ## Banner
 
