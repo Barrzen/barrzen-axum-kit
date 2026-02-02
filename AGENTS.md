@@ -33,7 +33,7 @@
 - `HttpConfig::http_request_timeout_seconds` is not enforced by a timeout layer.
 - `CorsConfig` exists but no CORS middleware is applied.
 - `request_log_headers_allowlist` is unused; request logging currently logs only method/path/status/latency.
-- Infra DB init uses `DATABASE_URL`, while template env files use `DB_URL` and other DB_* fields.
+- Infra DB init accepts `DATABASE_URL` (preferred) or `DB_URL`.
 - Search and broker initialization are placeholders.
 - `/readyz` always returns HTTP 200 even when degraded.
 
