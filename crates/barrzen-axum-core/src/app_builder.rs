@@ -7,11 +7,11 @@ use std::{
     pin::Pin,
     sync::Arc,
     task::{Context, Poll},
-    time::Instant,
+    time::{Duration, Instant},
 };
 
 use axum::{
-    http::{HeaderName, HeaderValue},
+    http::{HeaderName, HeaderValue, Method},
     http::Request,
     Router,
 };
@@ -19,6 +19,7 @@ use tokio::net::TcpListener;
 use tower::{Layer, Service};
 use tower_http::{
     compression::CompressionLayer,
+    cors::CorsLayer,
     limit::RequestBodyLimitLayer,
     request_id::{MakeRequestUuid, PropagateRequestIdLayer, SetRequestIdLayer},
     sensitive_headers::SetSensitiveRequestHeadersLayer,
@@ -193,7 +194,55 @@ fn apply_middleware(router: Router<CoreState>, config: &Config) -> Router<CoreSt
         MakeRequestUuid,
     ));
 
+    // CORS (conditional)
+    let router = if config.features.feature_cors {
+        router.layer(build_cors_layer(config))
+    } else {
+        router
+    };
+
     router
+}
+
+fn build_cors_layer(config: &Config) -> CorsLayer {
+    let mut cors = CorsLayer::new()
+        .max_age(Duration::from_secs(config.cors.cors_max_age_seconds));
+
+    if config.cors.cors_allow_credentials {
+        cors = cors.allow_credentials(true);
+    }
+
+    let methods: Vec<Method> = config
+        .cors
+        .methods()
+        .into_iter()
+        .filter_map(|method| Method::from_bytes(method.as_bytes()).ok())
+        .collect();
+    if !methods.is_empty() {
+        cors = cors.allow_methods(methods);
+    }
+
+    let headers: Vec<HeaderName> = config
+        .cors
+        .headers()
+        .into_iter()
+        .filter_map(|header| HeaderName::from_bytes(header.as_bytes()).ok())
+        .collect();
+    if !headers.is_empty() {
+        cors = cors.allow_headers(headers);
+    }
+
+    let origins: Vec<HeaderValue> = config
+        .cors
+        .origins()
+        .into_iter()
+        .filter_map(|origin| HeaderValue::from_str(&origin).ok())
+        .collect();
+    if !origins.is_empty() {
+        cors = cors.allow_origin(origins);
+    }
+
+    cors
 }
 
 #[derive(Clone, Copy)]
