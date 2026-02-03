@@ -25,56 +25,56 @@ expect_used = "warn"
 
 [workspace.dependencies]
 # Core
-axum = { version = "0.8", features = ["macros"] }
-tokio = { version = "1", features = ["full"] }
-tower = { version = "0.5", features = ["util", "timeout"] }
-tower-http = { version = "0.6", features = ["cors", "compression-gzip", "limit", "request-id", "trace", "set-header", "sensitive-headers", "timeout"] }
+axum = { version = "0.8.8", features = ["macros"] }
+tokio = { version = "1.49.0", features = ["full"] }
+tower = { version = "0.5.3", features = ["util", "timeout"] }
+tower-http = { version = "0.6.8", features = ["cors", "compression-gzip", "limit", "request-id", "trace", "set-header", "sensitive-headers", "timeout"] }
 
 # Serialization
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.149"
 
 # Config
-dotenvy = "0.15"
-envy = "0.4"
+dotenvy = "0.15.7"
+envy = "0.4.2"
 
 # Error handling
-anyhow = "1"
-thiserror = "2"
-async-trait = "0.1"
+anyhow = "1.0.100"
+thiserror = "2.0.18"
+async-trait = "0.1.89"
 
 # Logging / Tracing
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
-log = "0.4"
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter", "json"] }
+log = "0.4.29"
 fast_log = "1.7.7"
 
 # Utilities
-uuid = { version = "1", features = ["v4"] }
-chrono = { version = "0.4", features = ["serde"] }
+uuid = { version = "1.20.0", features = ["v4"] }
+chrono = { version = "0.4.43", features = ["serde"] }
 
 # Database (SeaORM)
-sea-orm = { version = "1", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
+sea-orm = { version = "1.1.19", features = ["sqlx-postgres", "runtime-tokio-rustls", "macros"] }
 
 # Cache - Moka (embedded)
-moka = { version = "0.12", features = ["future"] }
+moka = { version = "0.12.13", features = ["future"] }
 
 # Cache - Redis/Valkey
-deadpool-redis = { version = "0.22" }
+deadpool-redis = { version = "0.22.1" }
 
 # Search - Meilisearch
-meilisearch-sdk = { version = "0.32" }
+meilisearch-sdk = { version = "0.32.0" }
 
 # Broker - NATS
-async-nats = { version = "0.46" }
+async-nats = { version = "0.46.0" }
 
 # OpenAPI
-utoipa = { version = "5", features = ["axum_extras", "chrono"] }
-utoipa-swagger-ui = { version = "9", features = ["axum"] }
+utoipa = { version = "5.4.0", features = ["axum_extras", "chrono"] }
+utoipa-swagger-ui = { version = "9.0.2", features = ["axum"] }
 
 # OpenTelemetry
-opentelemetry = { version = "0.31" }
-opentelemetry_sdk = { version = "0.31", features = ["rt-tokio"] }
-opentelemetry-otlp = { version = "0.31", features = ["grpc-tonic"] }
-tracing-opentelemetry = { version = "0.32" }
-tonic = { version = "0.14" }
+opentelemetry = { version = "0.31.0" }
+opentelemetry_sdk = { version = "0.31.0", features = ["rt-tokio"] }
+opentelemetry-otlp = { version = "0.31.0", features = ["grpc-tonic"] }
+tracing-opentelemetry = { version = "0.32.1" }
+tonic = { version = "0.14.3" }
