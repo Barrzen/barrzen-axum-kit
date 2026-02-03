@@ -10,10 +10,10 @@ GitHub repo: `https://github.com/Barrzen/barrzen-axum-kit`
 
 | Crate | Description | Features | Crates.io | Docs |
 |-------|-------------|----------|-----------|------|
-| `barrzen-axum-core` | Config, banner, AppBuilder, middleware, handlers | - | https://crates.io/crates/barrzen-axum-core | https://docs.rs/barrzen-axum-core |
-| `barrzen-axum-infra` | Database, cache, search, broker | `db`, `cache-moka`, `cache-redis`, `meilisearch`, `nats` | https://crates.io/crates/barrzen-axum-infra | https://docs.rs/barrzen-axum-infra |
-| `barrzen-axum-obs` | Tracing and OpenTelemetry | `otel` | https://crates.io/crates/barrzen-axum-obs | https://docs.rs/barrzen-axum-obs |
-| `barrzen-axum-openapi` | Swagger UI and OpenAPI docs | `openapi` | https://crates.io/crates/barrzen-axum-openapi | https://docs.rs/barrzen-axum-openapi |
+| `barrzen-axum-core` | Config, banner, AppBuilder, middleware, handlers | - | <https://crates.io/crates/barrzen-axum-core> | <https://docs.rs/barrzen-axum-core> |
+| `barrzen-axum-infra` | Database, cache, search, broker | `db`, `cache-moka`, `cache-redis`, `meilisearch`, `nats` | <https://crates.io/crates/barrzen-axum-infra> | <https://docs.rs/barrzen-axum-infra> |
+| `barrzen-axum-obs` | Tracing and OpenTelemetry | `otel` | <https://crates.io/crates/barrzen-axum-obs> | <https://docs.rs/barrzen-axum-obs> |
+| `barrzen-axum-openapi` | Swagger UI and OpenAPI docs | `openapi` | <https://crates.io/crates/barrzen-axum-openapi> | <https://docs.rs/barrzen-axum-openapi> |
 
 ## Installation
 
@@ -60,10 +60,10 @@ async fn main() -> anyhow::Result<()> {
 
 ## Docs
 
-- Rust docs: https://docs.rs/barrzen-axum-core
-- OpenAPI docs: https://docs.rs/barrzen-axum-openapi
-- Observability: https://docs.rs/barrzen-axum-obs
-- Infra: https://docs.rs/barrzen-axum-infra
+- Rust docs: <https://docs.rs/barrzen-axum-core>
+- OpenAPI docs: <https://docs.rs/barrzen-axum-openapi>
+- Observability: <https://docs.rs/barrzen-axum-obs>
+- Infra: <https://docs.rs/barrzen-axum-infra>
 
 ## Development
 
@@ -102,6 +102,7 @@ Example: You can compile with `db` feature but set `FEATURE_DB=false` to skip da
 ## CI/CD
 
 Deny warnings in CI:
+
 ```bash
 cargo clippy --all-targets --all-features -- -D warnings
 cargo test --all-features
