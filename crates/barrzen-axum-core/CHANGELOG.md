@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.1.10](https://github.com/Barrzen/barrzen-axum-kit/compare/v0.1.9...v0.1.10) - 2026-02-03
+
+### Added
+
+- add cors layer from config ([#19](https://github.com/Barrzen/barrzen-axum-kit/pull/19))
+
 ## [0.1.9](https://github.com/Barrzen/barrzen-axum-kit/compare/v0.1.7...v0.1.9) - 2026-02-02
 
 ### Added

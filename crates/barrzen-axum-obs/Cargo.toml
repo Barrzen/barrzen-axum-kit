@@ -1,6 +1,6 @@
 [package]
 name = "barrzen-axum-obs"
-version = "0.1.9"
+version = "0.1.10"
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
@@ -28,7 +28,7 @@ fast-log = ["fast_log", "log", "tracing/log"]
 
 [dependencies]
 # Core (for config types)
-barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.9" }
+barrzen-axum-core = { path = "../barrzen-axum-core", version = "0.1.10" }
 
 # Error handling
 anyhow.workspace = true
