@@ -13,11 +13,12 @@ All crates in the workspace (`barrzen-axum-core`, `barrzen-axum-infra`, etc.) sh
    Update the `version` field in `Cargo.toml` of all crates:
    - `barrzen-axum-kit/Cargo.toml` (workspace.package)
    - Crates inheriting version will update automatically.
-   
+
 2. **Update Changelog**:
    Update `CHANGELOG.md` (if present) with new changes.
 
 3. **Commit & Tag**:
+
    ```bash
    git commit -am "chore: release v0.2.0"
    git tag v0.2.0
@@ -30,7 +31,7 @@ All crates in the workspace (`barrzen-axum-core`, `barrzen-axum-infra`, etc.) sh
    2. `barrzen-axum-infra`
    3. `barrzen-axum-obs`
    4. `barrzen-axum-openapi`
-   
+
    ```bash
    cargo publish -p barrzen-axum-core
    # ...
